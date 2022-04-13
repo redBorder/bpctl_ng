@@ -3781,7 +3781,7 @@ static int wdt_timer(bpctl_dev_t *pbpctl_dev, int *time_left){
 
 static int wdt_timer_reload(bpctl_dev_t *pbpctl_dev){
 
-    int ret=0;
+    /*int ret=0;*/
 
 	if ((pbpctl_dev->bp_40g) || (pbpctl_dev->bp_rang)) {
         if (pbpctl_dev->bp_caps&WD_CTL_CAP) {
@@ -3794,10 +3794,10 @@ static int wdt_timer_reload(bpctl_dev_t *pbpctl_dev){
     if ((pbpctl_dev->bp_caps&WD_CTL_CAP)&&
         (pbpctl_dev->wdt_status!=WDT_STATUS_UNKNOWN)) {
         if (pbpctl_dev->bp_ext_ver>=PXG2BPI_VER)
-            ret= wdt_pulse(pbpctl_dev);
+            /*ret=*/ wdt_pulse(pbpctl_dev);
         else if (INTEL_IF_SERIES(pbpctl_dev->subdevice))
-            ret=wdt_pulse_int(pbpctl_dev);
-        else  ret=send_wdt_pulse(pbpctl_dev);
+            /*ret=*/ wdt_pulse_int(pbpctl_dev);
+        else  /*ret=*/ send_wdt_pulse(pbpctl_dev);
         //if (ret==-1)
         //    mod_timer(&pbpctl_dev->bp_timer, jiffies+1);
         return 1;
@@ -8656,7 +8656,8 @@ int bpvm_probe(void)
 
 
 
-
+#define REDBORDER_PATCH
+#ifndef REDBORDER_PATCH
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
 static int device_ioctl(struct inode *inode, /* see include/linux/fs.h */
                         struct file *file, /* ditto */
@@ -8667,6 +8668,11 @@ static long device_ioctl(struct file *file, /* ditto */
                          unsigned int ioctl_num, /* number and param for ioctl */
                          unsigned long ioctl_param)
 
+#endif
+#else
+static int device_call_or_ioctl(unsigned int ioctl_num,
+                                void *ioctl_param,
+	                            int kernel_ioctl /* boolean: 0 standard ioctl, 1 - kernel call */)
 #endif
 {
     struct bpctl_cmd bpctl_cmd;
@@ -8690,6 +8696,11 @@ static long device_ioctl(struct file *file, /* ditto */
         ret=SUCCESS;
         goto bp_exit;
     }
+#ifdef REDBORDER_PATCH
+    if (kernel_ioctl) {
+        memcpy(&bpctl_cmd, argp, sizeof(struct bpctl_cmd));
+    } else
+#endif
     if (copy_from_user(&bpctl_cmd, argp, sizeof(struct bpctl_cmd))) {
 
         ret= -EFAULT; 
@@ -8698,6 +8709,11 @@ static long device_ioctl(struct file *file, /* ditto */
 
     if (ioctl_num==IOCTL_TX_MSG(GET_DEV_NUM)) {
         bpctl_cmd.out_param[0]= device_num;
+#ifdef REDBORDER_PATCH
+        if (kernel_ioctl) {
+            memcpy(argp, &bpctl_cmd, sizeof(struct bpctl_cmd));
+        } else
+#endif
         if (copy_to_user(argp,(void *)&bpctl_cmd,sizeof(struct bpctl_cmd))) {
             ret=-EFAULT;
             goto bp_exit;
@@ -8878,6 +8894,11 @@ static long device_ioctl(struct file *file, /* ditto */
 
     case IOCTL_TX_MSG(GET_BYPASS_CAPS):
         bpctl_cmd.status= get_bypass_caps_fn(pbpctl_dev);
+#ifdef REDBORDER_PATCH
+        if (kernel_ioctl) {
+            memcpy(argp, &bpctl_cmd, sizeof(struct bpctl_cmd));
+        } else
+#endif
         if (copy_to_user(argp, (void *)&bpctl_cmd, sizeof(struct bpctl_cmd))) {
             ret= -EFAULT;   
             goto bp_exit;
@@ -9008,6 +9029,11 @@ static long device_ioctl(struct file *file, /* ditto */
         goto bp_exit;
     }
     bpcmd_exit:
+#ifdef REDBORDER_PATCH
+    if (kernel_ioctl) {
+        memcpy(argp, &bpctl_cmd, sizeof(struct bpctl_cmd));
+    } else
+#endif
     if (copy_to_user(argp, (void *)&bpctl_cmd, sizeof(struct bpctl_cmd)))
         ret= -EFAULT;
     ret= SUCCESS;
@@ -9018,6 +9044,28 @@ static long device_ioctl(struct file *file, /* ditto */
     return ret;
 }
 
+#ifdef REDBORDER_PATCH
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
+static int device_ioctl(struct inode *inode, /* see include/linux/fs.h */
+                        struct file *file, /* ditto */
+                        unsigned int ioctl_num, /* number and param for ioctl */
+                        unsigned long ioctl_param)
+#else
+static long device_ioctl(struct file *file, /* ditto */
+                         unsigned int ioctl_num, /* number and param for ioctl */
+                         unsigned long ioctl_param)
+#endif
+                                                   {
+    return device_call_or_ioctl(ioctl_num, (void *) ioctl_param, 0);
+}
+
+int bpctl_kernel_ioctl(unsigned int ioctl_num,
+		       void *ioctl_param) {
+    //printk("[BPCTL] set bypass request via kernel hook\n");
+    return device_call_or_ioctl(ioctl_num, ioctl_param, 1);
+}
+EXPORT_SYMBOL(bpctl_kernel_ioctl);
+#endif
 
 struct file_operations Fops = {
     .owner = THIS_MODULE,
@@ -9977,7 +10025,7 @@ static int v2_bypass_init_module(void)
     if (!device_num) {
         printk("No such device\n"); 
         unregister_chrdev(major_num, DEVICE_NAME);
-        return -1;
+        return +1;
     }
 
 
@@ -13080,13 +13128,13 @@ int bypass_proc_create_dev_sd(bpctl_dev_t *pbp_device_block)
 int bypass_proc_remove_dev_sd(bpctl_dev_t * pbp_device_block){
 
     struct bypass_pfs_sd *current_pfs = &pbp_device_block->bypass_pfs_set;
-    struct proc_dir_entry *pde = current_pfs->bypass_entry, *pde_curr=NULL; 
+    struct proc_dir_entry *pde = current_pfs->bypass_entry/*, *pde_curr=NULL*/; 
     char name[256]; 
     if (!pde)
         return 0;
     for (pde=pde->subdir; pde; ) {
         strcpy(name,pde->name);
-        pde_curr=pde;
+        /*pde_curr=pde;*/
         pde=pde->next;
         remove_proc_entry(name,current_pfs->bypass_entry);
     }

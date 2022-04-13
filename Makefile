@@ -22,7 +22,7 @@
 # Silicom, Ltd
 ################################################################################
 
-MOD_VER=5.2.0.42
+MOD_VER=5.2.0.42-rb
 
 PRDPATH_UTIL=/bin
 TARGET_UTIL=bpctl_util
