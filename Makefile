@@ -112,6 +112,12 @@ clean:
 	@-rm -rf *.ko
 	rm -rf $(OBJS_UTIL) $(TARGET_UTIL)
 
+rpm: clean
+	$(MAKE) -C packaging/rpm
+
+rpmtest:
+	$(MAKE) LATEST=`git stash create` -C packaging/rpm
+
 # Install the modules
 install: default
 	@echo "Installing modules..."
