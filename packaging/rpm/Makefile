@@ -10,7 +10,7 @@ RESULT_DIR?=pkgs
 
 LATEST?=HEAD
 
-KERNEL?=3.10.0-1160.59.1
+KERNEL?=3.10.0-1160.62.1
 
 all: rpm
 
