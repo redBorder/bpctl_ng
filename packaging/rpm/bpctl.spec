@@ -6,8 +6,7 @@ License: GNU AGPLv3
 URL: https://github.com/redBorder/bpctl
 Source0: %{name}-%{version}.tar.gz
 
-#BuildRequires: kernel-3.10.0-1160.62.1.el7.x86_64 kernel-devel-3.10.0-1160.62.1.el7.x86_64 kernel-headers-3.10.0-1160.62.1.el7.x86_64
-#Requires: kernel-3.10.0-1160.62.1.el7.x86_64 kernel-devel-3.10.0-1160.62.1.el7.x86_64 kernel-headers-3.10.0-1160.62.1.el7.x86_64
+BuildRequires: kernel-devel kernel-headers
 
 Summary: Silicom Linux Bypass-SD Control Utility
 Group:   Development/Utilities
@@ -19,8 +18,6 @@ Group:   Development/Utilities
 %setup -qn %{name}-%{version}
 
 %build
-uname -a
-ls /lib/modules/
 make
 
 %install
