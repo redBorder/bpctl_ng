@@ -32,7 +32,10 @@ rm -rf %{buildroot}
 
 %pre
 
-%post -p /sbin/ldconfig
+%post 
+/sbin/ldconfig
+/sbin/depmod
+
 %postun -p /sbin/ldconfig
 
 %files
