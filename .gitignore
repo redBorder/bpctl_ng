@@ -1,4 +1,10 @@
 # SOURCES and pkgs
+*.o
+*.ko
+bpctl_util
+modules.order
+Module.symvers
+kernel/.*
 SOURCES
 pkgs
 

@@ -1,0 +1,39 @@
+GIT_REV:=unknown
+ifneq (, $(shell which git))
+ ifeq (, $(shell echo ${SUBDIRS}))
+  GIT_BRANCH=$(shell git branch --no-color|cut -d ' ' -f 2)
+  GIT_HASH=$(shell git rev-parse HEAD)
+  ifneq ($(strip $(GIT_BRANCH)),)
+   GIT_REV:=${GIT_BRANCH}:${GIT_HASH}
+  endif
+ endif
+endif
+
+all: install
+
+add: remove
+	\/bin/rm -rf /usr/src/$(PACKAGE_NAME)-$(VERSION)
+	mkdir /usr/src/$(PACKAGE_NAME)-$(VERSION)
+	sed -i "s|PACKAGE_NAME=.*$$|PACKAGE_NAME=$${PACKAGE_NAME}|" dkms.conf
+	sed -i "s|PACKAGE_VERSION=.*$$|PACKAGE_VERSION=$${VERSION}|" dkms.conf
+	cp -r Makefile common.mk dkms.conf *.c *.h /usr/src/$(PACKAGE_NAME)-$(VERSION)
+	cat Makefile | sed -e "s/GIT_REV:=$$/GIT_REV:=${GIT_REV}/" > /usr/src/$(PACKAGE_NAME)-$(VERSION)/Makefile
+	dkms add -m $(PACKAGE_NAME) -v $(VERSION)
+
+build: add
+	dkms build -m $(PACKAGE_NAME) -v $(VERSION)
+
+install: build
+	dkms install --force -m $(PACKAGE_NAME) -v $(VERSION)
+
+rpm: add add_rpm install
+	dkms mkrpm -m $(PACKAGE_NAME) -v $(VERSION) --source-only
+
+add_rpm:
+	cp -r $(PACKAGE_NAME)-dkms-*.spec /usr/src/$(PACKAGE_NAME)-$(VERSION)/
+
+remove:
+	-dkms remove -m $(PACKAGE_NAME) -v $(VERSION) --all
+
+veryclean: remove
+	\/bin/rm -fr /usr/src/$(PACKAGE_NAME)-$(VERSION)

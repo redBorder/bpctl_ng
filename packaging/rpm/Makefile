@@ -10,8 +10,6 @@ RESULT_DIR?=pkgs
 
 LATEST?=HEAD
 
-KERNEL?=3.10.0-1160.59.1
-
 all: rpm
 
 SOURCES:
@@ -43,7 +41,6 @@ rpm: srpm
 		-r $(MOCK_CONFIG) \
 		--define "__version $(VERSION)"\
 		--define "__release $(BUILD_NUMBER)"\
-		--define "__kernel $(KERNEL)"\
 		--resultdir=$(RESULT_DIR) \
 		--rebuild $(RESULT_DIR)/$(PACKAGE_NAME)*.src.rpm
 	@echo "======= Binary RPMs now available in $(RESULT_DIR) ======="

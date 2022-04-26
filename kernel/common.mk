@@ -327,6 +327,7 @@ export INSTALL_MOD_DIR ?= updates/drivers/net/ethernet/intel/${DRIVER}
 # KSRC -- the location of the kernel source tree to build against
 # DRIVER_UPPERCASE -- the uppercase name of the kernel module, set from DRIVER
 #
+$(warning ${CURDIR})
 kernelbuild = ${MAKE} $(if ${GCC_I_SYS},CC="${GCC_I_SYS}") \
                       ${CCFLAGS_VAR}="${EXTRA_CFLAGS}" \
                       -C "${KSRC}" \
