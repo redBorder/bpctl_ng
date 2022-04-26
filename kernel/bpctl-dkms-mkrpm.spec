@@ -18,7 +18,7 @@ Requires: 	dkms >= 1.958
 AutoReqProv: 	no
 #BuildRequires: 	dkms, kernel-devel
 BuildRequires: 	kernel-devel
-Requires:       kernel-devel, make
+Requires:       kernel-headers kernel-devel make
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root/
 
 %description
