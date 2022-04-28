@@ -6,7 +6,7 @@ License: GNU AGPLv3
 URL: https://github.com/redBorder/bpctl
 Source0: %{name}-%{version}.tar.gz
 
-Requires: bpctl-dkms
+Requires: bpctl-dkms 
 
 Summary: Silicom Linux Bypass-SD Control Utility
 Group:   Development/Utilities
