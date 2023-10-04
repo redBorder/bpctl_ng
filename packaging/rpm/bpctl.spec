@@ -1,3 +1,5 @@
+%global debug_package %{nil}
+
 Name:    bpctl
 Version: %{__version}
 Release: %{__release}%{?dist}
@@ -5,6 +7,8 @@ Release: %{__release}%{?dist}
 License: GNU AGPLv3
 URL: https://github.com/redBorder/bpctl
 Source0: %{name}-%{version}.tar.gz
+
+BuildRequires: make gcc
 
 Requires: bpctl-dkms
 
