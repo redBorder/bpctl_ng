@@ -41,10 +41,10 @@ rpm: add add_rpm install
 	mkdir -p /var/lib/dkms/$(PACKAGE_NAME)/$(VERSION)/rpm/
 	cp -rf /root/rpmbuild/RPMS/noarch/$(PACKAGE_NAME)-dkms-$(VERSION)-$(RELEASE).*.rpm /var/lib/dkms/$(PACKAGE_NAME)/$(VERSION)/rpm/
 	cp -rf /root/rpmbuild/SRPMS/$(PACKAGE_NAME)-dkms-$(VERSION)-$(RELEASE).*.rpm /var/lib/dkms/$(PACKAGE_NAME)/$(VERSION)/rpm/
-	@mkdir -p $(@D)/packaging/rpm/
+	@mkdir -p $(@D)/packaging/rpm/pkgs/
 	rm -rf $(@D)/packaging/rpm/*.rpm
-	cp -rf /root/rpmbuild/RPMS/noarch/$(PACKAGE_NAME)-dkms-$(VERSION)-$(RELEASE).*.rpm $(@D)/packaging/rpm/
-	cp -rf /root/rpmbuild/SRPMS/$(PACKAGE_NAME)-dkms-$(VERSION)-$(RELEASE).*.rpm $(@D)/packaging/rpm/
+	cp -rf /root/rpmbuild/RPMS/noarch/$(PACKAGE_NAME)-dkms-$(VERSION)-$(RELEASE).*.rpm $(@D)/packaging/rpm/pkgs/
+	cp -rf /root/rpmbuild/SRPMS/$(PACKAGE_NAME)-dkms-$(VERSION)-$(RELEASE).*.rpm $(@D)/packaging/rpm/pkgs/
 
 add_rpm:
 	cp -r $(PACKAGE_NAME)-dkms-*.spec /usr/src/$(PACKAGE_NAME)-$(VERSION)/
