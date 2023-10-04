@@ -34,7 +34,7 @@ install: build
 
 rpm: add add_rpm install
 	#dkms mkrpm -m $(PACKAGE_NAME) -v $(VERSION) --source-only
-	rpmbuild -ba --define 'module_name $(PACKAGE_NAME)' --define 'version $(VERSION)' --define 'kernel_versions $(KERNEL_VERSION)' --define 'packager $(PACKAGER)' --define 'license $(LICENSE)' $(PACKAGE_NAME)-dkms-mkrpm.spec
+	rpmbuild -ba --define 'module_name $(PACKAGE_NAME)' --define 'version $(VERSION)' --define 'kernel_versions $(KERNEL_VERSION)' --define 'packager $(PACKAGER)' --define 'license $(LICENSE)' --define 'release $(RELEASE)' $(PACKAGE_NAME)-dkms-mkrpm.spec
 	mkdir -p /var/lib/dkms/$(PACKAGE_NAME)/$(VERSION)/rpm/
 	cp -rf /root/rpmbuild/RPMS/noarch/*.rpm /var/lib/dkms/$(PACKAGE_NAME)/$(VERSION)/rpm/
 	cp -rf /root/rpmbuild/SRPMS/*.rpm /var/lib/dkms/$(PACKAGE_NAME)/$(VERSION)/rpm/

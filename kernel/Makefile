@@ -1,6 +1,7 @@
 
 PACKAGE_NAME?=	bpctl
 VERSION?=	$(shell git describe --abbrev=6 --tags HEAD --always | sed 's/-/_/g')
+RELEASE?=1
 
 obj-m := bpctl_mod.o
 bpctl_mod-objs := bp_mod.o
@@ -70,7 +71,7 @@ all:
 	@+$(call devkernelbuild,modules)	
 
 dkms-rpm:
-	sudo $(MAKE) PACKAGE_NAME=$(PACKAGE_NAME) VERSION=$(VERSION) -f Makefile.dkms rpm
+	sudo $(MAKE) PACKAGE_NAME=$(PACKAGE_NAME) VERSION=$(VERSION) RELEASE=$(RELEASE) -f Makefile.dkms rpm
 
 clean:
 	@+$(call devkernelbuild,clean)
