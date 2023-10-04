@@ -20,10 +20,10 @@ We use rpmbuild to build kernel module dkms src and binary rpm execute:
 
 ```
 cd kernel
-make rpm
+make dkms-rpm
 ```
 
-In this case the rpms will be place in /var/lib/dkms/bpctl/<version>/rpm/
+In this case the rpms will be place in /var/lib/dkms/bpctl/\<version\>/rpm/
 
 Note: Originaly the dkms rpm was built using `dmks mkrpm`, since this is gone in new versions we are building with rpmbuild. TODO: Will be cool to do it with mock too
 
