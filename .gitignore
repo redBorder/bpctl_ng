@@ -12,3 +12,4 @@ SOURCES
 pkgs
 .tmp_versions
 bpctl_mod.mod.c
+packaging
