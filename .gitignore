@@ -11,4 +11,8 @@ kernel/.*
 SOURCES
 pkgs
 .tmp_versions
+.Module.symvers.cmd
+.modules.order.cmd
+bpctl_mod.mod
 bpctl_mod.mod.c
+packaging
