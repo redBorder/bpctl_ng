@@ -12,6 +12,7 @@ BuildRequires: make gcc
 
 Requires: bpctl-dkms
 
+
 Summary: Silicom Linux Bypass-SD Control Utility
 Group:   Development/Utilities
 
