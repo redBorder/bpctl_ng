@@ -9,6 +9,14 @@ ifneq (, $(shell which git))
  endif
 endif
 
+#KERNEL_VERSION:=5.14.0-284.30.1
+KERNEL_FULL_VERSION := $(shell uname -r)
+KERNEL_VERSION := $(word 1, $(subst ., , $(KERNEL_FULL_VERSION)))
+PACKAGER:=Miguel Negron <manegron@redborder.com>
+LICENSE:=ASL 2.0
+
+#rpmdir=@mkdir -p $(@D)/packaging/rpm/
+
 all: install
 
 add: remove
@@ -27,7 +35,16 @@ install: build
 	dkms install --force -m $(PACKAGE_NAME) -v $(VERSION)
 
 rpm: add add_rpm install
-	dkms mkrpm -m $(PACKAGE_NAME) -v $(VERSION) --source-only
+	#dkms mkrpm -m $(PACKAGE_NAME) -v $(VERSION) --source-only
+	rm -rf /var/lib/dkms/$(PACKAGE_NAME)/$(VERSION)/rpm/$(PACKAGE_NAME)-dkms-*.rpm
+	rpmbuild -ba --define 'module_name $(PACKAGE_NAME)' --define 'version $(VERSION)' --define 'kernel_versions $(KERNEL_VERSION)' --define 'packager $(PACKAGER)' --define 'license $(LICENSE)' --define 'release $(RELEASE)' $(PACKAGE_NAME)-dkms-mkrpm.spec
+	mkdir -p /var/lib/dkms/$(PACKAGE_NAME)/$(VERSION)/rpm/
+	cp -rf /root/rpmbuild/RPMS/noarch/$(PACKAGE_NAME)-dkms-$(VERSION)-$(RELEASE).*.rpm /var/lib/dkms/$(PACKAGE_NAME)/$(VERSION)/rpm/
+	cp -rf /root/rpmbuild/SRPMS/$(PACKAGE_NAME)-dkms-$(VERSION)-$(RELEASE).*.rpm /var/lib/dkms/$(PACKAGE_NAME)/$(VERSION)/rpm/
+	@mkdir -p $(@D)/packaging/rpm/
+	rm -rf $(@D)/packaging/rpm/*.rpm
+	cp -rf /root/rpmbuild/RPMS/noarch/$(PACKAGE_NAME)-dkms-$(VERSION)-$(RELEASE).*.rpm $(@D)/packaging/rpm/
+	cp -rf /root/rpmbuild/SRPMS/$(PACKAGE_NAME)-dkms-$(VERSION)-$(RELEASE).*.rpm $(@D)/packaging/rpm/
 
 add_rpm:
 	cp -r $(PACKAGE_NAME)-dkms-*.spec /usr/src/$(PACKAGE_NAME)-$(VERSION)/

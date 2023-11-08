@@ -1,10 +1,18 @@
 # SOURCES and pkgs
 *.o
+*.o.cmd
+*.o.d
 *.ko
+*.ko.cmd
 bpctl_util
 modules.order
 Module.symvers
 kernel/.*
 SOURCES
 pkgs
-
+.tmp_versions
+.Module.symvers.cmd
+.modules.order.cmd
+bpctl_mod.mod
+bpctl_mod.mod.c
+packaging

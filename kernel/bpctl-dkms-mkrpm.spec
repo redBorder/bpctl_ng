@@ -11,7 +11,7 @@ Summary:	%{module_name} %{version} dkms package
 Name:		%{module_name}-dkms
 Version:	%{version}
 License:	%license
-Release:	3728
+Release:	%{release}
 BuildArch:	noarch
 Group:		System/Kernel
 Requires: 	dkms >= 1.958
