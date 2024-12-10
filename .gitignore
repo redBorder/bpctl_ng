@@ -15,4 +15,3 @@ pkgs
 .modules.order.cmd
 bpctl_mod.mod
 bpctl_mod.mod.c
-packaging
