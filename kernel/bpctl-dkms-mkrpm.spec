@@ -16,9 +16,8 @@ BuildArch:	noarch
 Group:		System/Kernel
 Requires: 	dkms >= 1.958
 AutoReqProv: 	no
-#BuildRequires: 	dkms, kernel-devel
-BuildRequires: 	kernel-devel
-Requires:       kernel-devel, make
+BuildRequires: 	dkms kernel-devel
+Requires:       kernel-headers kernel-devel make
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root/
 
 %description
@@ -30,11 +29,6 @@ if [ "%mktarball_line" != "none" ]; then
         cp -af %{_dkmsdir}/%{module_name}/%{version}/tarball/`basename %{module_name}-%{version}.dkms.tar.gz` %{module_name}-%{version}.dkms.tar.gz
 fi
 
-# Execution order:
-# install:    pre -> (copy) -> post
-# upgrade:    pre -> (copy) -> post -> preun (old) -> (delete old) -> postun (old)
-# un-install:                          preun       -> (delete)     -> postun
-
 %pre
 case "$1" in
 	1)
@@ -45,9 +39,9 @@ case "$1" in
 	dkms remove -m %{module_name} -v %{version} --all --rpm_safe_upgrade
 	;;
 esac
-\/bin/rm -f /lib/modules/*/weak-updates/bpctl_mod.ko*
-\/bin/rm -f /lib/modules/*/extra/bpctl_mod.ko*
-\/bin/rm -fr /var/lib/dkms/%{module_name}
+/bin/rm -f /lib/modules/*/weak-updates/bpctl_mod.ko*
+/bin/rm -f /lib/modules/*/extra/bpctl_mod.ko*
+/bin/rm -fr /var/lib/dkms/%{module_name}
 
 %install
 if [ "$RPM_BUILD_ROOT" != "/" ]; then
@@ -64,10 +58,6 @@ if [ -f %{module_name}-%{version}.dkms.tar.gz ]; then
         install -m 644 %{module_name}-%{version}.dkms.tar.gz $RPM_BUILD_ROOT/%{_datarootdir}/%{module_name}
 fi
 
-if [ -f %{_sourcedir}/common.postinst ]; then
-        install -m 755 %{_sourcedir}/common.postinst $RPM_BUILD_ROOT/%{_datarootdir}/%{module_name}/postinst
-fi
-
 %post
 case "$1" in
 	1)
@@ -79,18 +69,21 @@ case "$1" in
 	;;
 esac
 
-for POSTINST in %{_prefix}/lib/dkms/common.postinst %{_datarootdir}/%{module_name}/postinst; do
-        if [ -f $POSTINST ]; then
-                $POSTINST %{module_name} %{version} %{_datarootdir}/%{module_name}
-                exit $?
-        fi
-        echo "WARNING: $POSTINST does not exist."
-done
-echo -e "ERROR: DKMS version is too old and %{module_name} was not"
-echo -e "built with legacy DKMS support."
-echo -e "You must either rebuild %{module_name} with legacy postinst"
-echo -e "support or upgrade DKMS to a more current version."
-exit 1
+# Reemplazo de common.postinst por comandos DKMS directos
+if ! dkms add -m %{module_name} -v %{version}; then
+    echo "ERROR: Failed to add DKMS module %{module_name} version %{version}"
+    exit 1
+fi
+
+if ! dkms build -m %{module_name} -v %{version}; then
+    echo "ERROR: Failed to build DKMS module %{module_name} version %{version}"
+    exit 1
+fi
+
+if ! dkms install -m %{module_name} -v %{version}; then
+    echo "ERROR: Failed to install DKMS module %{module_name} version %{version}"
+    exit 1
+fi
 
 %preun
 echo -e
@@ -111,9 +104,9 @@ exit 0
 case "$1" in
 	0)
 	# un-install
-	\/bin/rm -f /lib/modules/*/weak-updates/bpctl_mod.ko*
-	\/bin/rm -f /lib/modules/*/extra/bpctl_mod.ko*
-	\/bin/rm -fr /var/lib/dkms/%{module_name}
+	/bin/rm -f /lib/modules/*/weak-updates/bpctl_mod.ko*
+	/bin/rm -f /lib/modules/*/extra/bpctl_mod.ko*
+	/bin/rm -fr /var/lib/dkms/%{module_name}
 	;;
 	1)
 	# upgrade
