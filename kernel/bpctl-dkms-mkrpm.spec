@@ -53,18 +53,14 @@ if [ "$RPM_BUILD_ROOT" != "/" ]; then
         echo "Deleting build root directory: $RPM_BUILD_ROOT"
         rm -rf $RPM_BUILD_ROOT
 fi
-echo "Creating directory: $RPM_BUILD_ROOT%{_srcdir}"
 mkdir -p $RPM_BUILD_ROOT%{_srcdir}
-echo "Creating directory: $RPM_BUILD_ROOT%{_datarootdir}/%{module_name}"
 mkdir -p $RPM_BUILD_ROOT%{_datarootdir}/%{module_name}
 
 if [ -d %{_sourcedir}/%{module_name}-%{version} ]; then
-        echo "Copying %{_sourcedir}/%{module_name}-%{version} -> $RPM_BUILD_ROOT%{_srcdir}"
         cp -Lpr %{_sourcedir}/%{module_name}-%{version} $RPM_BUILD_ROOT%{_srcdir}
 fi
 
 if [ -f %{module_name}-%{version}.dkms.tar.gz ]; then
-        echo "Installing %{module_name}-%{version}.dkms.tar.gz -> $RPM_BUILD_ROOT%{_datarootdir}/%{module_name}"
         install -m 644 %{module_name}-%{version}.dkms.tar.gz $RPM_BUILD_ROOT%{_datarootdir}/%{module_name}
 fi
 
@@ -79,7 +75,6 @@ case "$1" in
 	;;
 esac
 
-echo "Checking if file %{_datarootdir}/%{module_name}/%{module_name}-%{version}.dkms.tar.gz exists.."
 if [ -f "%{_datarootdir}/%{module_name}/%{module_name}-%{version}.dkms.tar.gz" ]; then
     if ! dkms ldtarball --archive "%{_datarootdir}/%{module_name}/%{module_name}-%{version}.dkms.tar.gz"; then
         echo ""
@@ -93,26 +88,26 @@ if [ -f "%{_datarootdir}/%{module_name}/%{module_name}-%{version}.dkms.tar.gz" ]
         echo ""
         exit 2
     fi
-    # TODO: check dkms status before install
+
     if ! dkms install -m %{module_name} -v %{version}; then
       echo "ERROR: Failed to install DKMS module %{module_name} version %{version}"
       exit 1
     fi
 elif [ -d "%{_sourcedir}/%{module_name}-%{version}" ]; then
-    echo "Loading new %{module_name}-%{version} DKMS files..."
-    if ! dkms add -m %{module_name} -v %{version}; then
-      echo "ERROR: Failed to add DKMS module %{module_name} version %{version}"
-      exit 1
+    occurrences=/usr/sbin/dkms status | grep "%{module_name}" | grep "%{version}" | wc -l
+    if [ ! occurrences > 0 ];
+    then
+      if ! dkms add -m %{module_name} -v %{version}; then
+        echo "ERROR: Failed to add DKMS module %{module_name} version %{version}"
+        exit 1
+      fi
     fi
 
-    echo "Executing dkms build.."
     if ! dkms build -m %{module_name} -v %{version}; then
       echo "ERROR: Failed to build DKMS module %{module_name} version %{version}"
       exit 1
     fi
 
-    # TODO: check dkms status before install
-    echo "Executing dkms install.."
     if ! dkms install -m %{module_name} -v %{version}; then
         echo "ERROR: Failed to install DKMS module %{module_name} version %{version}"
         exit 1
