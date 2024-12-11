@@ -50,7 +50,6 @@ esac
 
 %install
 if [ "$RPM_BUILD_ROOT" != "/" ]; then
-        echo "Deleting build root directory: $RPM_BUILD_ROOT"
         rm -rf $RPM_BUILD_ROOT
 fi
 mkdir -p $RPM_BUILD_ROOT%{_srcdir}
