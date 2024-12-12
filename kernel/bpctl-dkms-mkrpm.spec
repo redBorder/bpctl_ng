@@ -16,9 +16,8 @@ BuildArch:	noarch
 Group:		System/Kernel
 Requires: 	dkms >= 1.958
 AutoReqProv: 	no
-#BuildRequires: 	dkms, kernel-devel
-BuildRequires: 	kernel-devel
-Requires:       kernel-devel, make
+BuildRequires: 	dkms kernel-devel
+Requires:       kernel-headers kernel-devel make
 BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-root/
 
 %description
@@ -53,19 +52,15 @@ esac
 if [ "$RPM_BUILD_ROOT" != "/" ]; then
         rm -rf $RPM_BUILD_ROOT
 fi
-mkdir -p $RPM_BUILD_ROOT/%{_srcdir}
-mkdir -p $RPM_BUILD_ROOT/%{_datarootdir}/%{module_name}
+mkdir -p $RPM_BUILD_ROOT%{_srcdir}
+mkdir -p $RPM_BUILD_ROOT%{_datarootdir}/%{module_name}
 
 if [ -d %{_sourcedir}/%{module_name}-%{version} ]; then
-        cp -Lpr %{_sourcedir}/%{module_name}-%{version} $RPM_BUILD_ROOT/%{_srcdir}
+        cp -Lpr %{_sourcedir}/%{module_name}-%{version} $RPM_BUILD_ROOT%{_srcdir}
 fi
 
 if [ -f %{module_name}-%{version}.dkms.tar.gz ]; then
-        install -m 644 %{module_name}-%{version}.dkms.tar.gz $RPM_BUILD_ROOT/%{_datarootdir}/%{module_name}
-fi
-
-if [ -f %{_sourcedir}/common.postinst ]; then
-        install -m 755 %{_sourcedir}/common.postinst $RPM_BUILD_ROOT/%{_datarootdir}/%{module_name}/postinst
+        install -m 644 %{module_name}-%{version}.dkms.tar.gz $RPM_BUILD_ROOT%{_datarootdir}/%{module_name}
 fi
 
 %post
@@ -79,18 +74,45 @@ case "$1" in
 	;;
 esac
 
-for POSTINST in %{_prefix}/lib/dkms/common.postinst %{_datarootdir}/%{module_name}/postinst; do
-        if [ -f $POSTINST ]; then
-                $POSTINST %{module_name} %{version} %{_datarootdir}/%{module_name}
-                exit $?
-        fi
-        echo "WARNING: $POSTINST does not exist."
-done
-echo -e "ERROR: DKMS version is too old and %{module_name} was not"
-echo -e "built with legacy DKMS support."
-echo -e "You must either rebuild %{module_name} with legacy postinst"
-echo -e "support or upgrade DKMS to a more current version."
-exit 1
+if [ -f "%{_datarootdir}/%{module_name}/%{module_name}-%{version}.dkms.tar.gz" ]; then
+    if ! dkms ldtarball --archive "%{_datarootdir}/%{module_name}/%{module_name}-%{version}.dkms.tar.gz"; then
+        echo ""
+        echo ""
+        echo "Unable to load DKMS tarball %{_datarootdir}/%{module_name}/%{module_name}-%{version}.dkms.tar.gz."
+        echo "Common causes include: "
+        echo " - You must be using DKMS 2.1.0.0 or later to support binaries only"
+        echo "   distribution specific archives."
+        echo " - Corrupt distribution specific archive"
+        echo ""
+        echo ""
+        exit 2
+    fi
+
+    if ! dkms install -m %{module_name} -v %{version}; then
+      echo "ERROR: Failed to install DKMS module %{module_name} version %{version}"
+      exit 1
+    fi
+elif [ -d "%{_sourcedir}/%{module_name}-%{version}" ]; then
+    occurrences=/usr/sbin/dkms status | grep "%{module_name}" | grep "%{version}" | wc -l
+    if [ ! occurrences > 0 ];
+    then
+      if ! dkms add -m %{module_name} -v %{version}; then
+        echo "ERROR: Failed to add DKMS module %{module_name} version %{version}"
+        exit 1
+      fi
+    fi
+
+    if ! dkms build -m %{module_name} -v %{version}; then
+      echo "ERROR: Failed to build DKMS module %{module_name} version %{version}"
+      exit 1
+    fi
+
+    if ! dkms install -m %{module_name} -v %{version}; then
+        echo "ERROR: Failed to install DKMS module %{module_name} version %{version}"
+        exit 1
+    fi
+fi
+
 
 %preun
 echo -e
@@ -133,3 +155,4 @@ fi
 %changelog
 * %(date "+%a %b %d %Y") %packager %{version}-%{release}
 - Automatic build by DKMS
+
