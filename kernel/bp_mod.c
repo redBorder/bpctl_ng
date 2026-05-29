@@ -71,7 +71,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <linux/device.h>
 #include <linux/slab.h>
 
-
 #include "bp_ioctl.h"
 #include "bp_mod.h"
 #include "bypass.h"
@@ -3822,7 +3821,8 @@ static void wd_reset_timer(unsigned long param){
     bpctl_dev_t *pbpctl_dev= (bpctl_dev_t *) param;
 #else
 static void wd_reset_timer(struct timer_list *t){
-    bpctl_dev_t *pbpctl_dev= from_timer(pbpctl_dev, t, bp_timer);
+    //bpctl_dev_t *pbpctl_dev= from_timer(pbpctl_dev, t, bp_timer);
+    bpctl_dev_t *pbpctl_dev= container_of(t, bpctl_dev_t, bp_timer);
 #endif
 #ifdef BP_SELF_TEST
     struct sk_buff *skb_tmp; 
@@ -6911,7 +6911,8 @@ static void bp_tpl_timer_fn(unsigned long param){
     bpctl_dev_t *pbpctl_dev=(bpctl_dev_t *) param;
 #else
 static void bp_tpl_timer_fn(struct timer_list *t){
-    bpctl_dev_t *pbpctl_dev=from_timer(pbpctl_dev, t, bp_tpl_timer);
+    //bpctl_dev_t *pbpctl_dev=from_timer(pbpctl_dev, t, bp_tpl_timer);
+    bpctl_dev_t *pbpctl_dev= container_of(t, bpctl_dev_t, bp_tpl_timer);
 #endif
     uint32_t link1, link2;
     bpctl_dev_t *pbpctl_dev_b=NULL;
@@ -7821,7 +7822,8 @@ static void bpvm_led_blink_callback(unsigned long data)
 #else
 static void bpvm_led_blink_callback(struct timer_list *t)
 {
-	bpctl_dev_t *pbpctl_dev = from_timer(pbpctl_dev, t, blink_timer);
+	//bpctl_dev_t *pbpctl_dev = from_timer(pbpctl_dev, t, blink_timer);
+    bpctl_dev_t *pbpctl_dev= container_of(t, bpctl_dev_t, blink_timer);
 #endif
 
     if (test_and_change_bit(0, (volatile unsigned long *)&pbpctl_dev->led_status)) {
@@ -7841,7 +7843,8 @@ wait_callback(unsigned long data)
 #else
 wait_callback(struct timer_list *t)
 {
-    bpctl_dev_t *pbpctl_dev = from_timer(pbpctl_dev, t, wait_timer);
+    //bpctl_dev_t *pbpctl_dev = from_timer(pbpctl_dev, t, wait_timer);
+    bpctl_dev_t *pbpctl_dev= container_of(t, bpctl_dev_t, wait_timer);
 #endif 
 
     del_timer_sync(&pbpctl_dev->blink_timer);
